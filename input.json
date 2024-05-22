@@ -1,0 +1,168 @@
+[
+  {
+    "identifier": "100121csfxvz",
+    "enabled": true,
+    "family": "multifunctionals",
+    "categories": [
+      "erp_multifunctionals",
+      "printers",
+      "printers_ink_and_toners"
+    ],
+    "groups": [],
+    "parent": null,
+    "values": {
+      "brand": [
+        {
+          "locale": null,
+          "scope": null,
+          "data": "oki",
+          "attribute_type": "pim_catalog_simpleselect"
+        }
+      ],
+      "printer_type": [
+        {
+          "locale": null,
+          "scope": null,
+          "data": "all_in_one",
+          "attribute_type": "pim_catalog_simpleselect"
+        }
+      ],
+      "maximum_print_size": [
+        {
+          "locale": null,
+          "scope": null,
+          "data": "a4_210_x_297_mm_",
+          "attribute_type": "pim_catalog_simpleselect"
+        }
+      ],
+      "printer_connectivity": [
+        {
+          "locale": null,
+          "scope": null,
+          "data": [
+            "usb"
+          ],
+          "attribute_type": "pim_catalog_multiselect"
+        }
+      ],
+      "multifunctional_functions": [
+        {
+          "locale": null,
+          "scope": null,
+          "data": [
+            "scan"
+          ],
+          "attribute_type": "pim_catalog_multiselect"
+        }
+      ],
+      "price": [
+        {
+          "locale": null,
+          "scope": null,
+          "data": [
+            {
+              "amount": "159.00",
+              "currency": "EUR"
+            },
+            {
+              "amount": "189.00",
+              "currency": "USD"
+            }
+          ],
+          "attribute_type": "pim_catalog_price_collection"
+        }
+      ],
+      "image_1": [
+        {
+          "locale": null,
+          "scope": null,
+          "data": "d/6/c/7/d6c7cbef00a587c9bd0c7017ad533af506ca319b_100121_1864.jpg",
+          "_links": {
+            "download": {
+              "href": "https://pim-0f62dfa2cd.trial.akeneo.cloud/api/rest/v1/media-files/d/6/c/7/d6c7cbef00a587c9bd0c7017ad533af506ca319b_100121_1864.jpg/download"
+            }
+          },
+          "attribute_type": "pim_catalog_image"
+        }
+      ],
+      "sku": [
+        {
+          "locale": null,
+          "scope": null,
+          "data": "100121",
+          "attribute_type": "pim_catalog_identifier"
+        }
+      ],
+      "name": [
+        {
+          "locale": "en_US",
+          "scope": null,
+          "data": "OKI B4100 Desktop printer",
+          "attribute_type": "pim_catalog_text"
+        },
+        {
+          "locale": "es_ES",
+          "scope": null,
+          "data": "OKI B4100 Desktop printer",
+          "attribute_type": "pim_catalog_text"
+        },
+        {
+          "locale": "zh_CN",
+          "scope": null,
+          "data": "OKI B4100 Desktop printer",
+          "attribute_type": "pim_catalog_text"
+        }
+      ],
+      "meta_title": [
+        {
+          "locale": "en_US",
+          "scope": null,
+          "data": "OKI B4100 desktop printer",
+          "attribute_type": "pim_catalog_text"
+        }
+      ],
+      "description": [
+        {
+          "locale": "en_US",
+          "scope": "ecommerce",
+          "data": "<p> The B4100 is a host based Windows desktop printer </p>",
+          "attribute_type": "pim_catalog_textarea"
+        }
+      ],
+      "meta_description": [
+        {
+          "locale": "en_US",
+          "scope": null,
+          "data": "Oki B4100 A4 Mono Laser Printer",
+          "attribute_type": "pim_catalog_textarea"
+        }
+      ],
+      "color_scanning": [
+        {
+          "locale": null,
+          "scope": null,
+          "data": true,
+          "attribute_type": "pim_catalog_boolean"
+        }
+      ],
+      "mobile_device_printing": [
+        {
+          "locale": null,
+          "scope": null,
+          "data": true,
+          "attribute_type": "pim_catalog_boolean"
+        }
+      ],
+      "automatic_two_sided_printing": [
+        {
+          "locale": null,
+          "scope": null,
+          "data": true,
+          "attribute_type": "pim_catalog_boolean"
+        }
+      ]
+    },
+    "created": "2024-05-14T17:55:56+00:00",
+    "updated": "2024-05-17T14:24:08+00:00"
+  }
+]

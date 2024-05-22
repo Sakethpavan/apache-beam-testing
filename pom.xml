@@ -14,6 +14,24 @@
     <maven-shade-plugin.version>3.1.0</maven-shade-plugin.version>
     <slf4j.version>1.7.30</slf4j.version>
   </properties>
+
+  <profiles>
+    <profile>
+      <id>direct-runner</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <!-- Makes the DirectRunner available when running a pipeline. -->
+      <dependencies>
+        <dependency>
+          <groupId>org.apache.beam</groupId>
+          <artifactId>beam-runners-direct-java</artifactId>
+          <version>${beam.version}</version>
+          <scope>runtime</scope>
+        </dependency>
+      </dependencies>
+    </profile>
+  </profiles>
   <dependencies>
     <!-- Apache Beam SDK for Java Core -->
     <dependency>

@@ -1,4 +1,7 @@
 package com.example;
+import com.example.model.AttributeValueDTO;
+import com.example.model.ProductDTO;
+import com.example.model.ProductDTOCoder;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
@@ -32,8 +35,8 @@ public class Main
 
     public static void parseProductsJson(String[] args) {
         logger.info("Starting parseProductsJson with args: {}", (Object) args);
-        PipelineOptionsFactory.register(ProductDataPipeline.class);
-        ProductDataPipeline options = PipelineOptionsFactory.fromArgs(args).withValidation().as(ProductDataPipeline.class);
+        PipelineOptionsFactory.register(ProductDataPipelineOptions.class);
+        ProductDataPipelineOptions options = PipelineOptionsFactory.fromArgs(args).withValidation().as(ProductDataPipelineOptions.class);
         Pipeline pipeline = Pipeline.create(options);
         ProductDTOCoder.registerCoder(pipeline.getCoderRegistry());
 

@@ -1,4 +1,4 @@
-package com.example;
+package com.example.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -17,8 +17,14 @@ public class AttributeValueDTO {
     @JsonProperty("data")
     private Object data;
 
+    @JsonProperty("linked_data")
+    private Object linkedData;
+
     @JsonProperty("attribute_type")
     private String attributeType;
+
+    @JsonProperty("reference_data_name")
+    private String referenceDataName;
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     @JsonProperty("_links")
@@ -48,12 +54,28 @@ public class AttributeValueDTO {
         this.data = data;
     }
 
+    public Object getLinkedData() {
+        return linkedData;
+    }
+
+    public void setLinkedData(Object linkedData) {
+        this.linkedData = linkedData;
+    }
+
     public String getAttributeType() {
         return attributeType;
     }
 
     public void setAttributeType(String attributeType) {
         this.attributeType = attributeType;
+    }
+
+    public String getReferenceDataName() {
+        return referenceDataName;
+    }
+
+    public void setReferenceDataName(String referenceDataName) {
+        this.referenceDataName = referenceDataName;
     }
 
     public Map<String, Map<String, String>> getLinks() {

@@ -9,11 +9,12 @@ import org.apache.beam.sdk.transforms.*;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Objects;
+
 import org.apache.beam.sdk.io.FileIO;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
@@ -22,14 +23,9 @@ import org.jetbrains.annotations.NotNull;
 import org.joda.time.Duration;
 
 
-/**
- * Hello world!
- *
- */
 public class Main
 {
     private static final ObjectMapper objectMapper = new ObjectMapper();
-    private static final OkHttpClient client = new OkHttpClient();
 
     public static void parseProductsJson(String[] args) {
         PipelineOptionsFactory.register(ProductDataPipeline.class);
@@ -114,41 +110,41 @@ public class Main
     }
 
     static class CallApiFn extends DoFn<KV<String, Iterable<ProductDTO>>, Void> {
+        private static final OkHttpClient client = new OkHttpClient();
+
         @ProcessElement
         public void processElement(@Element KV<String, Iterable<ProductDTO>> kv) throws Exception {
-            List<ProductDTO> products = new ArrayList<>();
-            kv.getValue().forEach(products::add);
+            for(ProductDTO product: Objects.requireNonNull(kv.getValue())) {
+                // Convert the list of ProductDTO to JSON
+                String json = objectMapper.writeValueAsString(product);
+                // Create the request body
+                RequestBody body = RequestBody.create(json, MediaType.get("application/json"));
 
-            // Convert the list of ProductDTO to JSON
-            String json = objectMapper.writeValueAsString(products);
+                // Create the HTTP POST request
+                Request request = new Request.Builder()
+                        .url("http://localhost:8080/products")
+                        .post(body)
+                        .build();
 
-            // Create the request body
-            RequestBody body = RequestBody.create(json, MediaType.get("application/json; charset=utf-8"));
-
-            // Create the HTTP POST request
-            Request request = new Request.Builder()
-                    .url("http://localhost:8080/products")
-                    .post(body)
-                    .build();
-
-            // Send the request and handle the response
-            client.newCall(request).enqueue(new Callback() {
-                @Override
-                public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                    e.printStackTrace();
-                }
-
-                @Override
-                public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                    if (response.isSuccessful()) {
-                        System.out.println("Response status code: " + response.code());
-                        System.out.println("Response body: " + response.body());
-                    } else {
-                        System.err.println("Request failed with status code: " + response.code());
-                        System.err.println("Response body: " + response.body());
+                // Send the request and handle the response
+                client.newCall(request).enqueue(new Callback() {
+                    @Override
+                    public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                        e.printStackTrace();
                     }
-                }
-            });
+
+                    @Override
+                    public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                        if (response.isSuccessful()) {
+                            System.out.println("Response status code: " + response.code());
+                            System.out.println("Response body: " + response.body());
+                        } else {
+                            System.err.println("Request failed with status code: " + response.code());
+                            System.err.println("Response body: " + response.body());
+                        }
+                    }
+                });
+            };
         }
     }
 

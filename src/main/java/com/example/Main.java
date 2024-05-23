@@ -21,13 +21,17 @@ import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.util.ShardedKey;
 import org.jetbrains.annotations.NotNull;
 import org.joda.time.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class Main
 {
     private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
     public static void parseProductsJson(String[] args) {
+        logger.info("Starting parseProductsJson with args: {}", (Object) args);
         PipelineOptionsFactory.register(ProductDataPipeline.class);
         ProductDataPipeline options = PipelineOptionsFactory.fromArgs(args).withValidation().as(ProductDataPipeline.class);
         Pipeline pipeline = Pipeline.create(options);
@@ -72,6 +76,7 @@ public class Main
         public void processElement(ProcessContext c) throws Exception {
             FileIO.ReadableFile file = c.element();
             String content = new String(Files.readAllBytes(Paths.get(file.getMetadata().resourceId().toString())), StandardCharsets.UTF_8);
+            logger.debug("Read file content: {}", content);
             c.output(content);
         }
     }
@@ -80,6 +85,7 @@ public class Main
         @ProcessElement
         public void processElement(ProcessContext c) throws Exception {
             String jsonString = c.element();
+            logger.debug("Parsing JSON: {}", jsonString);
             JsonNode jsonArray = objectMapper.readTree(jsonString);
 
             if (jsonArray.isArray()) {
@@ -98,6 +104,7 @@ public class Main
     static class AssignKeyFn extends DoFn<ProductDTO, KV<String, ProductDTO>> {
         @ProcessElement
         public void processElement(@Element ProductDTO productDTO, OutputReceiver<KV<String, ProductDTO>> out) {
+            logger.debug("Assigning key to ProductDTO: {}", productDTO);
             out.output(KV.of("key", productDTO));
         }
     }
@@ -130,17 +137,15 @@ public class Main
                 client.newCall(request).enqueue(new Callback() {
                     @Override
                     public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                        e.printStackTrace();
+                        logger.error("API call failed", e);
                     }
 
                     @Override
                     public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                         if (response.isSuccessful()) {
-                            System.out.println("Response status code: " + response.code());
-                            System.out.println("Response body: " + response.body());
+                            logger.info("API call successful for {}: status code {}", product.getIdentifier(), response.code());
                         } else {
-                            System.err.println("Request failed with status code: " + response.code());
-                            System.err.println("Response body: " + response.body());
+                            logger.error("API call failed for {}: status code {}", product.getIdentifier(), response.code());
                         }
                     }
                 });
@@ -149,6 +154,7 @@ public class Main
     }
 
     public static void main( String[] args ) {
+        logger.info("Starting application with args: {}", (Object) args);
         parseProductsJson(args);
     }
 

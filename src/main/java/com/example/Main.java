@@ -1,23 +1,19 @@
 package com.example;
-import com.example.model.AttributeValueDTO;
+import com.example.config.PipelineConfig;
 import com.example.model.ProductDTO;
 import com.example.model.ProductDTOCoder;
+import com.example.service.AuthService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.*;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-
-import java.util.List;
-import java.util.Map;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Objects;
-
 import org.apache.beam.sdk.io.FileIO;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
@@ -33,7 +29,7 @@ public class Main
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
-    public static void parseProductsJson(String[] args) {
+    public static Pipeline constructPipeline(String[] args, String accessToken, PipelineConfig config) {
         logger.info("Starting parseProductsJson with args: {}", (Object) args);
         PipelineOptionsFactory.register(ProductDataPipelineOptions.class);
         ProductDataPipelineOptions options = PipelineOptionsFactory.fromArgs(args).withValidation().as(ProductDataPipelineOptions.class);
@@ -54,24 +50,9 @@ public class Main
 
         PCollection<KV<String, Iterable<ProductDTO>>> unshardedBatches = batchedProducts.apply("UnshardBatches", ParDo.of(new UnshardBatchesFn()));
 
-        unshardedBatches.apply("CallAPI", ParDo.of(new CallApiFn()));
+        unshardedBatches.apply("CallAPI", ParDo.of(new CallApiFn(accessToken, config.getProductsEndpoint())));
 
-        pipeline.run().waitUntilFinish();
-    }
-
-    private static void updateDescription(ProductDTO productDTO) {
-        // Update description field
-        Map<String, List<AttributeValueDTO>> values = productDTO.getValues();
-        if (values != null && values.containsKey("description")) {
-            List<AttributeValueDTO> descriptionList = values.get("description");
-            if (descriptionList != null && !descriptionList.isEmpty()) {
-                for (AttributeValueDTO attributeValueDTO : descriptionList) {
-                    if ("en_US".equals(attributeValueDTO.getLocale()) && "ecommerce".equals(attributeValueDTO.getScope())) {
-                        attributeValueDTO.setData(" The B4100 is a Windows desktop printer ");
-                    }
-                }
-            }
-        }
+        return pipeline;
     }
 
     static class ReadEntireFileFn extends DoFn<FileIO.ReadableFile, String> {
@@ -121,22 +102,25 @@ public class Main
 
     static class CallApiFn extends DoFn<KV<String, Iterable<ProductDTO>>, Void> {
         private static final OkHttpClient client = new OkHttpClient();
+        private final String accessToken;
+        private final String productsEndpoint;
+
+        public CallApiFn(String accessToken, String productsEndpoint) {
+            this.accessToken = accessToken;
+            this.productsEndpoint = productsEndpoint;
+        }
 
         @ProcessElement
-        public void processElement(@Element KV<String, Iterable<ProductDTO>> kv) throws Exception {
-            for(ProductDTO product: Objects.requireNonNull(kv.getValue())) {
-                // Convert the list of ProductDTO to JSON
+        public void processElement(ProcessContext context) throws Exception {
+            for (ProductDTO product : Objects.requireNonNull(context.element().getValue())) {
                 String json = objectMapper.writeValueAsString(product);
-                // Create the request body
                 RequestBody body = RequestBody.create(json, MediaType.get("application/json"));
-
-                // Create the HTTP POST request
                 Request request = new Request.Builder()
-                        .url("http://localhost:8080/products")
+                        .url(productsEndpoint)
+                        .header("Authorization", "Bearer " + accessToken)
                         .post(body)
                         .build();
 
-                // Send the request and handle the response
                 client.newCall(request).enqueue(new Callback() {
                     @Override
                     public void onFailure(@NotNull Call call, @NotNull IOException e) {
@@ -152,13 +136,28 @@ public class Main
                         }
                     }
                 });
-            };
+            }
         }
     }
 
     public static void main( String[] args ) {
         logger.info("Starting application with args: {}", (Object) args);
-        parseProductsJson(args);
+        PipelineConfig config = new PipelineConfig();
+        config.setClientId("8_66ezeyfxjbgocsk0w4cgokw0k8wooogw44kogwccos4gswo40w");
+        config.setSecret("49x98j1wqtmosg0okcw48os0kg00o0swoco48o4kos84s8w8w0");
+        config.setHostUrl("https://pim-8f53d76134.trial.akeneo.cloud");
+        config.setUsername("postman_1986");
+        config.setPassword("755677568");
+        config.setProductsEndpoint(config.getHostUrl() + "/api/rest/v1/products"); // Set products endpoint
+        try {
+            String tokenEndpoint = config.getHostUrl() + "/api/oauth/v1/token";
+            AuthService authService = new AuthService(config.getClientId(), config.getSecret(), tokenEndpoint, config.getUsername(), config.getPassword());
+            String accessToken = authService.getAccessToken();
+            Pipeline pipeline = constructPipeline(args, accessToken, config);
+            pipeline.run().waitUntilFinish();
+        } catch (Exception e) {
+            logger.error("Error occurred during pipeline execution", e);
+        }
     }
 
 }

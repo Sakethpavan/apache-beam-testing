@@ -186,4 +186,3 @@ public class ProductDTO {
         return MAPPER.readValue(json, ProductDTO.class);
     }
 }
-

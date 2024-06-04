@@ -1,5 +1,5 @@
 package com.example;
-import com.example.config.PipelineConfig;
+import com.example.config.ProductDataPipelineOptions;
 import com.example.model.ProductDTO;
 import com.example.model.ProductDTOCoder;
 import com.example.service.AuthService;
@@ -29,10 +29,8 @@ public class Main
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
-    public static Pipeline constructPipeline(String[] args, String accessToken, PipelineConfig config) {
+    public static Pipeline constructPipeline(String[] args, String accessToken, ProductDataPipelineOptions options) {
         logger.info("Starting parseProductsJson with args: {}", (Object) args);
-        PipelineOptionsFactory.register(ProductDataPipelineOptions.class);
-        ProductDataPipelineOptions options = PipelineOptionsFactory.fromArgs(args).withValidation().as(ProductDataPipelineOptions.class);
         Pipeline pipeline = Pipeline.create(options);
         ProductDTOCoder.registerCoder(pipeline.getCoderRegistry());
 
@@ -50,7 +48,8 @@ public class Main
 
         PCollection<KV<String, Iterable<ProductDTO>>> unshardedBatches = batchedProducts.apply("UnshardBatches", ParDo.of(new UnshardBatchesFn()));
 
-        unshardedBatches.apply("CallAPI", ParDo.of(new CallApiFn(accessToken, config.getProductsEndpoint())));
+        String akeneoProductsEndpoint = options.getHostUrl() + "/api/rest/v1/products";
+        unshardedBatches.apply("CallAPI", ParDo.of(new CallApiFn(accessToken, akeneoProductsEndpoint)));
 
         return pipeline;
     }
@@ -118,7 +117,7 @@ public class Main
                 Request request = new Request.Builder()
                         .url(productsEndpoint)
                         .header("Authorization", "Bearer " + accessToken)
-                        .post(body)
+//                        .post(body)
                         .build();
 
                 client.newCall(request).enqueue(new Callback() {
@@ -142,18 +141,19 @@ public class Main
 
     public static void main( String[] args ) {
         logger.info("Starting application with args: {}", (Object) args);
-        PipelineConfig config = new PipelineConfig();
-        config.setClientId("8_66ezeyfxjbgocsk0w4cgokw0k8wooogw44kogwccos4gswo40w");
-        config.setSecret("49x98j1wqtmosg0okcw48os0kg00o0swoco48o4kos84s8w8w0");
-        config.setHostUrl("https://pim-8f53d76134.trial.akeneo.cloud");
-        config.setUsername("postman_1986");
-        config.setPassword("755677568");
-        config.setProductsEndpoint(config.getHostUrl() + "/api/rest/v1/products"); // Set products endpoint
         try {
-            String tokenEndpoint = config.getHostUrl() + "/api/oauth/v1/token";
-            AuthService authService = new AuthService(config.getClientId(), config.getSecret(), tokenEndpoint, config.getUsername(), config.getPassword());
+            PipelineOptionsFactory.register(ProductDataPipelineOptions.class);
+            ProductDataPipelineOptions options = PipelineOptionsFactory.fromArgs(args).withValidation().as(ProductDataPipelineOptions.class);
+            String tokenEndpoint = options.getHostUrl() + "/api/oauth/v1/token";
+            AuthService authService = new AuthService(
+                    options.getClientId(),
+                    options.getSecret(),
+                    tokenEndpoint,
+                    options.getUsername(),
+                    options.getPassword()
+            );
             String accessToken = authService.getAccessToken();
-            Pipeline pipeline = constructPipeline(args, accessToken, config);
+            Pipeline pipeline = constructPipeline(args, accessToken, options);
             pipeline.run().waitUntilFinish();
         } catch (Exception e) {
             logger.error("Error occurred during pipeline execution", e);

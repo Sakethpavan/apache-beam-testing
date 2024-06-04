@@ -29,8 +29,8 @@ public class Main
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
-    public static Pipeline constructPipeline(String[] args, String accessToken, ProductDataPipelineOptions options) {
-        logger.info("Starting parseProductsJson with args: {}", (Object) args);
+    public static Pipeline constructPipeline( String accessToken, ProductDataPipelineOptions options) {
+        logger.info("creating pipeline");
         Pipeline pipeline = Pipeline.create(options);
         ProductDTOCoder.registerCoder(pipeline.getCoderRegistry());
 
@@ -153,7 +153,7 @@ public class Main
                     options.getPassword()
             );
             String accessToken = authService.getAccessToken();
-            Pipeline pipeline = constructPipeline(args, accessToken, options);
+            Pipeline pipeline = constructPipeline(accessToken, options);
             pipeline.run().waitUntilFinish();
         } catch (Exception e) {
             logger.error("Error occurred during pipeline execution", e);

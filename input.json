@@ -1,6 +1,6 @@
 [
   {
-    "identifier": "100121csfxvz",
+    "identifier": "1001sak",
     "enabled": true,
     "family": "multifunctionals",
     "categories": [
@@ -162,6 +162,20 @@
         }
       ]
     },
+    "created": "2024-05-14T17:55:56+00:00",
+    "updated": "2024-05-17T14:24:08+00:00"
+  },
+  {
+    "identifier": "100121saj",
+    "enabled": true,
+    "family": "multifunctionals",
+    "categories": [
+      "erp_multifunctionals",
+      "printers",
+      "printers_ink_and_toners"
+    ],
+    "groups": [],
+    "parent": null,
     "created": "2024-05-14T17:55:56+00:00",
     "updated": "2024-05-17T14:24:08+00:00"
   }

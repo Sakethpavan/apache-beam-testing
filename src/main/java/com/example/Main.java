@@ -5,6 +5,9 @@ import com.example.model.ProductDTOCoder;
 import com.example.service.AuthService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageOptions;
 import okhttp3.*;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
@@ -58,9 +61,26 @@ public class Main
         @ProcessElement
         public void processElement(ProcessContext c) throws Exception {
             FileIO.ReadableFile file = c.element();
-            String content = new String(Files.readAllBytes(Paths.get(file.getMetadata().resourceId().toString())), StandardCharsets.UTF_8);
-            logger.debug("Read file content: {}", content);
-            c.output(content);
+            String filePath = file.getMetadata().resourceId().toString();
+            if (filePath.startsWith("gs:")) {
+                // read data from storage bucket
+                int lastIndex = filePath.lastIndexOf('/');
+                String fullBucketName = filePath.substring(0, lastIndex);
+                String bucketName = fullBucketName.split("gs://")[1];
+                String objectName = filePath.substring(lastIndex + 1);
+                Storage storage = StorageOptions.newBuilder()
+                        .build()
+                        .getService();
+                Blob blob = storage.get(bucketName, objectName);
+                String content = new String(blob.getContent());
+                logger.debug("Read file content: {}", content);
+                c.output(content);
+            } else {
+                // read local file
+                String content = new String(Files.readAllBytes(Paths.get(file.getMetadata().resourceId().toString())), StandardCharsets.UTF_8);
+                logger.debug("Read file content: {}", content);
+                c.output(content);
+            }
         }
     }
 
